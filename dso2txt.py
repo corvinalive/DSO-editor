@@ -23,5 +23,7 @@ print IniFileName
 
 x=dso_tools.ReadIni("/home/corvin/Programizm/Python/ForwardBD/reports/sut/RepData.ini")
 print "\n\n",x
+y=dso_tools.CheckDSO("/home/corvin/Programizm/Python/ForwardBD/reports/sut/Repdata.dso",x)
+print "\n\n",x
 dso_tools.ReadDSO("/home/corvin/Programizm/Python/ForwardBD/reports/sut/Repdata.dso",x)
 

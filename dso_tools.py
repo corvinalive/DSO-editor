@@ -17,7 +17,19 @@
 
 import ConfigParser
 import os
+import stat
 import sys
+
+#Константы для доступа данным, возращаемым функцией ReadIni
+readini_fld_type = 0
+readini_fld_name = 1
+readini_size = 2
+readini_unpackstr = 3
+
+#Константы для доступа данным, возращаемым функцией CheckDSO
+checkdso_file_size = 0
+checkdso_size_record = 1
+checkdso_records = 2
 
 #Функция разбора ини-файла
 def ReadIni(ini_file_name):
@@ -64,8 +76,31 @@ def ReadIni(ini_file_name):
 	print "Fields=\n",Fields
 	return Fields
 
-def CheckDSO(Fields):
+def CheckDSO(DSOFileName, Fields):
 	print "\nФайл dso_tools.py функция CheckDSO\n"
+	#вычисление размера одной записи
+	size_record=0
+	for i, item in enumerate(Fields):
+		size_record += item[readini_size]
+	print "Размер одной записи ", size_record
+
+	#вычисление количества записей
+	file_size=os.stat(DSOFileName)[stat.ST_SIZE]
+	print "Размер файла БД в байтах:", file_size
+
+	records = file_size/size_record
+	kratno = records*size_record - file_size
+	if kratno == 0 :
+		print "ОК: Размер файла кратен размеру записи. Количество записей ", records
+	else:
+		print "ОШИБКА: размер файла не кратен размеру записи. Возможно, файл поврежден"
+		sys.exit(0)
+
+	BD_Info = (file_size, size_record, records)
+
+	print "BD_Info=",BD_Info
+	return BD_Info
+
 	
 def ReadDSO(DSOFileName, Fields):
 	print "\nФайл dso_tools.py функция ReadDSO\n"
