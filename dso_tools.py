@@ -101,32 +101,59 @@ def CheckDSO(DSOFileName, Fields):
 	print "BD_Info=",BD_Info
 	return BD_Info
 
+def ReadRecord(DSOFileName, Fields, BD_Info, Index):
+	print "\nФайл dso_tools.py функция ReadRecord\n"
 	
-def ReadDSO(DSOFileName, Fields):
+	print "\nDSOFN = ", DSOFileName,"\nFileds = ",Fields, "Index = ", Index
+	
+	#проверка корректности Index
+	if Index < 0:
+		print('Index меньше 0 и равен ', Index)
+		sys.exit(0)	
+	if Index > BD_Info[checkdso_records]:
+		print('Index больше количества записей и равен ', Index, " Колчество записей равно ", BD_Info[checkdso_records])
+		sys.exit(0)	
+	#Вычислить смещение
+	offset = Index*BD_Info[checkdso_size_record]
+	bd_file=open(DSOFileName,'rb')
+	bd_file.seek(offset)
+	pointer = bd_file.read(BD_Info[checkdso_size_record])
+
+	if pointer :
+		integ = unpack(self.UnpackFields[0],pointer)
+#			print pointer, integ
+		wline = `integ[0]`
+#			print wline
+
+		pointer = bd_file.read( self.FieldSize[1])
+		integ = unpack(self.UnpackFields[1],pointer)
+#			print pointer, integ[0]
+		wline +="\t"+ `integ[0]`
+
+		print wline
+
+		pointer = bd_file.read( self.FieldSize[2])
+		integ = unpack(self.UnpackFields[2],pointer)
+#			print pointer, integ
+		wline +="\t"+ `integ[0]`+"\n"
+
+		print wline
+		f.write(wline)
+
+		pointer = bd_file.read( self.FieldSize[0])
+#			print "(file_size - bd_file.tell())=", (file_size - bd_file.tell())
+		f.close()
+
+	
+
+	
+def ReadDSO(DSOFileName, Fields, BD_Info):
 	print "\nФайл dso_tools.py функция ReadDSO\n"
 	
-	print "\nDSOFN=", DSOFileName,"\nFileds=",Fields
-"""
+	print "\nDSOFN=", DSOFileName,"\nFileds=",Fields, "\nBD_Info = ",BD_Info
+	
+	ReadRecord(DSOFileName, Fields,BD_Info, 0)
 
-		
-		#вычисление размера одной записи
-		size_record=0
-		for i in range(len(self.FieldSize)):
-			size_record+=self.FieldSize[i]
-		print "Размер одной записи в байтах: ", size_record
-
-		#вычисление количества записей
-		file_size=os.stat(self.BDFileName)[stat.ST_SIZE]
-		print "Размер файла БД в байтах:", file_size
-
-		records = file_size/size_record
-		kratno = records*size_record - file_size
-		if kratno == 0 :
-			print "ОК: Размер файла кратен размеру записи. Количество записей ", records
-		else:
-			print "ОШИБКА: размер файла не кратен размеру записи"
-
-"""
 #
 """import sys, os, stat, string
 #from PyQt4 import QtGui

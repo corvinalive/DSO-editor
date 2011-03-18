@@ -25,5 +25,5 @@ x=dso_tools.ReadIni("/home/corvin/Programizm/Python/ForwardBD/reports/sut/RepDat
 print "\n\n",x
 y=dso_tools.CheckDSO("/home/corvin/Programizm/Python/ForwardBD/reports/sut/Repdata.dso",x)
 print "\n\n",x
-dso_tools.ReadDSO("/home/corvin/Programizm/Python/ForwardBD/reports/sut/Repdata.dso",x)
+dso_tools.ReadDSO("/home/corvin/Programizm/Python/ForwardBD/reports/sut/Repdata.dso",x,y)
 
