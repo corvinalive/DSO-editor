@@ -21,9 +21,9 @@ IniFileName="/home/corvin/Programizm/Python/ForwardBD/reports/sut/RepData.ini"
 print BDFileName
 print IniFileName
 
-x=dso_tools.ReadIni("/home/corvin/Programizm/Python/ForwardBD/reports/sut/RepData.ini")
+x=dso_tools.ReadIni("xset.ini")
 print "\n\n",x
-y=dso_tools.CheckDSO("/home/corvin/Programizm/Python/ForwardBD/reports/sut/Repdata.dso",x)
+y=dso_tools.CheckDSO("xset.dso",x)
 print "\n\n",x
-dso_tools.ReadDSO("/home/corvin/Programizm/Python/ForwardBD/reports/sut/Repdata.dso",x,y)
+dso_tools.ReadDSO("xset.dso",x,y)
 

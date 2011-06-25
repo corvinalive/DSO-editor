@@ -19,8 +19,10 @@ import ConfigParser
 import os
 import stat
 import sys
+import string
+import struct
 
-#Константы для доступа данным, возращаемым функцией ReadIni
+#Константы для доступа данным, возращаемым функцией ReadIni кортеж 
 readini_fld_type = 0
 readini_fld_name = 1
 readini_size = 2
@@ -52,7 +54,7 @@ def ReadIni(ini_file_name):
 	Fields =[]
 	for i in range(FieldCount):
 		s = "Field"+str(i+1)
-		fld_type = config.get(s,"Type")
+		fld_type = string.lower(config.get(s,"Type"))
 		print s," field_type=",fld_type
 
 		fld_name = config.get(s,"Name")
@@ -61,15 +63,20 @@ def ReadIni(ini_file_name):
 		#сохранение размера поля			
 		size=0
 		unpackstr=''
-		if fld_type == "ftInteger":
+		if fld_type == "ftinteger":
 			size=4
 			unpackstr='=i'
 		
-		elif fld_type == "ftFloat":
+		elif fld_type == "ftfloat":
 			size=8
 			unpackstr='=d'
+			
+		elif fld_type== "ftstring":
+			size=string.atoi(config.get(s,"Size"))
+			unpackstr='=s'
+			
 		else:
-			print "ERROR: not found size of type ", ini.value(s).toString()
+			print "Ошибка: not found size of type ", fld_type
 
 		Fields.append((fld_type,fld_name,size, unpackstr))
 
@@ -94,7 +101,7 @@ def CheckDSO(DSOFileName, Fields):
 		print "ОК: Размер файла кратен размеру записи. Количество записей ", records
 	else:
 		print "ОШИБКА: размер файла не кратен размеру записи. Возможно, файл поврежден"
-		sys.exit(0)
+		#sys.exit(0)
 
 	BD_Info = (file_size, size_record, records)
 
@@ -120,7 +127,8 @@ def ReadRecord(DSOFileName, Fields, BD_Info, Index):
 	pointer = bd_file.read(BD_Info[checkdso_size_record])
 
 	if pointer :
-		integ = unpack(self.UnpackFields[0],pointer)
+####################################		integ = struct.unpack(self.UnpackFields[0],pointer)
+		integ = struct.unpack(Fields[0][readini_unpackstr],pointer)
 #			print pointer, integ
 		wline = `integ[0]`
 #			print wline
