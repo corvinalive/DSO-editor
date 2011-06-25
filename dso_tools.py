@@ -124,11 +124,26 @@ def ReadRecord(DSOFileName, Fields, BD_Info, Index):
 	offset = Index*BD_Info[checkdso_size_record]
 	bd_file=open(DSOFileName,'rb')
 	bd_file.seek(offset)
+	
+	#Прочитать запись в память
 	pointer = bd_file.read(BD_Info[checkdso_size_record])
 
+	#Разбираем запись
 	if pointer :
 ####################################		integ = struct.unpack(self.UnpackFields[0],pointer)
-		integ = struct.unpack(Fields[0][readini_unpackstr],pointer)
+
+		if Fields[0][readini_fld_type] == "ftstring" :
+			str_from_pointer = pointer[0:(Fields[0][readini_size]-1)]
+			
+			str_from_pointer = str_from_pointer[0:(string.index(str_from_pointer,'\0'))]
+
+			print "str_from_pointer=", str_from_pointer
+			str_from_pointer = str_from_pointer.decode('windows-1251')
+			print "str_from_pointer=", str_from_pointer
+			
+			
+			
+		integ = struct.unpack(Fields[0][readini_unpackstr][1],pointer)
 #			print pointer, integ
 		wline = `integ[0]`
 #			print wline
