@@ -77,6 +77,7 @@ def ReadIni(ini_file_name):
 			
 		else:
 			print "Ошибка: not found size of type ", fld_type
+			sys.exit(0)
 
 		Fields.append((fld_type,fld_name,size, unpackstr))
 
@@ -180,6 +181,86 @@ def ReadDSO(DSOFileName, Fields, BD_Info):
 
 	f.close()
 #
+
+#функция записи в файл одной записи (строки) из текстовика в файл БД
+#
+def WriteRecord(Fields, data_in_str,out_file):
+	#перебираем все поля
+	#print data_in_str
+#	data_in_str.split('\t')
+	#print data_in_str.decode('cp1251')
+	offset = 0
+	for field in Fields :
+		#разделяем строку на подстроки с разделителем табуляция
+		new_offset = data_in_str[offset:].index('\t')
+		field_str=data_in_str[offset : (offset+new_offset)]
+		print new_offset, " = new_offset, offset = ", offset, "str=", field_str
+		offset+= new_offset+1
+
+		#Записываем текстовое поле
+		if field[readini_fld_type] == "ftstring" :
+			str_fmt = str(field[readini_size])
+			str_fmt+="s"
+			if new_offset == 0:
+				out_data = struct.pack(str_fmt,"")
+			else:
+				out_data = struct.pack(str_fmt,field_str)
+			#пишем в файл
+			out_file.write(out_data)
+			
+		elif field[readini_fld_type] == "ftinteger" :
+		#Пишем числа integer
+			print field_str
+			number = string.atoi(field_str)
+			out_data = struct.pack("i",number)
+			#пишем в файл
+			out_file.write(out_data)
+			
+		elif field[readini_fld_type] == "ftfloat" :
+		#Пишем числа float
+			print field_str
+			number = string.atof(field_str)
+			out_data = struct.pack("d",number)
+			#пишем в файл
+			out_file.write(out_data)
+
+		else:
+			print "Ошибка при записи в dso: не найдем тип " , field[readini_fld_type]
+			sys.exit(0)
+
+	#		number = struct.unpack( field[readini_unpackstr],pointer[offset_in_record : (offset_in_record+field[readini_size])])
+#				print number[0]
+	#		wline+=str(number[0])
+	#		wline+="\t"
+	#	offset_in_record+=field[readini_size]
+#			print offset_in_record
+			
+	
+
+#Функция записи из текстовика в файл БД
+#файл со входными данными, имя выходного файла, данные (кортеж) с данными ReadIni
+def WriteDSO(in_file,out_file,Fields):
+	f = open(in_file,'rb')
+	
+	f_out = open(out_file,'wb')
+	while 1:
+		l = f.readline()
+		if not l:
+			break
+		WriteRecord(Fields,l,f_out);
+	
+	f.close()
+	f_out.close()
+ 
+#	for i in range(BD_Info[checkdso_records]):
+#		s=ReadRecord(DSOFileName, Fields,BD_Info, i)
+#		s+="\n"
+#		f.write(s.encode('cp1251'))
+		
+
+	
+	
+
 """import sys, os, stat, string
 #from PyQt4 import QtGui
 from PyQt4 import QtCore
