@@ -149,7 +149,6 @@ def ReadRecord(DSOFileName, Fields, BD_Info, Index):
 
 				#декодируем строку из виндовс-кодировки
 				str_from_pointer = str_from_pointer.decode('windows-1251')
-#				print "str_from_pointer=", str_from_pointer
 				wline+=str_from_pointer
 				wline+="\t"
 
@@ -171,10 +170,15 @@ def ReadRecord(DSOFileName, Fields, BD_Info, Index):
 def ReadDSO(DSOFileName, Fields, BD_Info):
 #	print "\nФайл dso_tools.py функция ReadDSO\n"
 	
-#	print "\nDSOFN=", DSOFileName,"\nFileds=",Fields, "\nBD_Info = ",BD_Info
-	
-	ReadRecord(DSOFileName, Fields,BD_Info, 1)
+#	print "\nDSOFN=", DSOFileName,"\nFields=",Fields, "\nBD_Info = ",BD_Info
+	f = open("DSO_в_тексте",'wb');
+	for i in range(BD_Info[checkdso_records]):
+		s=ReadRecord(DSOFileName, Fields,BD_Info, i)
+		s+="\n"
+		f.write(s.encode('cp1251'))
+		
 
+	f.close()
 #
 """import sys, os, stat, string
 #from PyQt4 import QtGui
