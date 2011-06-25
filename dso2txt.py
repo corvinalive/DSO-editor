@@ -16,14 +16,10 @@ import sys, os, stat, string, dso_tools
 from struct import *
 
 
-BDFileName="/home/corvin/Programizm/Python/ForwardBD/reports/sut/Repdata.dso"
-IniFileName="/home/corvin/Programizm/Python/ForwardBD/reports/sut/RepData.ini"
-print BDFileName
-print IniFileName
 
 x=dso_tools.ReadIni("xset.ini")
-print "\n\n",x
+#print "\n\n",x
 y=dso_tools.CheckDSO("xset.dso",x)
-print "\n\n",x
+#print "\n\n",x
 dso_tools.ReadDSO("xset.dso",x,y)
 

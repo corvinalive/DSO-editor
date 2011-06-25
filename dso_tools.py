@@ -35,7 +35,7 @@ checkdso_records = 2
 
 #Функция разбора ини-файла
 def ReadIni(ini_file_name):
-	print "\nФайл dso_tools.py функция ReadIni\n", "\nИмя ini-файла:", ini_file_name
+#	print "\nФайл dso_tools.py функция ReadIni\n", "\nИмя ini-файла:", ini_file_name
 
 	config = ConfigParser.ConfigParser()
 	config.read(ini_file_name)
@@ -45,7 +45,7 @@ def ReadIni(ini_file_name):
 		sys.exit(0)
 
 	FieldCount = config.getint("Fields","Number")
-	print "FieldCount=", FieldCount
+#	print "FieldCount=", FieldCount
 
 	if FieldCount <= 0:
 		print('В ini количество полей <= 0 (Fields)')
@@ -55,10 +55,10 @@ def ReadIni(ini_file_name):
 	for i in range(FieldCount):
 		s = "Field"+str(i+1)
 		fld_type = string.lower(config.get(s,"Type"))
-		print s," field_type=",fld_type
+#		print s," field_type=",fld_type
 
 		fld_name = config.get(s,"Name")
-		print s," field_name=",fld_name
+#		print s," field_name=",fld_name
 
 		#сохранение размера поля			
 		size=0
@@ -72,7 +72,7 @@ def ReadIni(ini_file_name):
 			unpackstr='=d'
 			
 		elif fld_type== "ftstring":
-			size=string.atoi(config.get(s,"Size"))
+			size=string.atoi(config.get(s,"Size"))+1
 			unpackstr='=s'
 			
 		else:
@@ -80,11 +80,11 @@ def ReadIni(ini_file_name):
 
 		Fields.append((fld_type,fld_name,size, unpackstr))
 
-	print "Fields=\n",Fields
+#	print "Fields=\n",Fields
 	return Fields
 
 def CheckDSO(DSOFileName, Fields):
-	print "\nФайл dso_tools.py функция CheckDSO\n"
+#	print "\nФайл dso_tools.py функция CheckDSO\n"
 	#вычисление размера одной записи
 	size_record=0
 	for i, item in enumerate(Fields):
@@ -101,17 +101,19 @@ def CheckDSO(DSOFileName, Fields):
 		print "ОК: Размер файла кратен размеру записи. Количество записей ", records
 	else:
 		print "ОШИБКА: размер файла не кратен размеру записи. Возможно, файл поврежден"
-		#sys.exit(0)
+		sys.exit(0)
 
 	BD_Info = (file_size, size_record, records)
 
-	print "BD_Info=",BD_Info
+#	print "BD_Info=",BD_Info
 	return BD_Info
 
+
+
 def ReadRecord(DSOFileName, Fields, BD_Info, Index):
-	print "\nФайл dso_tools.py функция ReadRecord\n"
+#	print "\nФайл dso_tools.py функция ReadRecord\n"
 	
-	print "\nDSOFN = ", DSOFileName,"\nFileds = ",Fields, "Index = ", Index
+#	print "\nDSOFN = ", DSOFileName,"\nFileds = ",Fields, "Index = ", Index
 	
 	#проверка корректности Index
 	if Index < 0:
@@ -129,53 +131,49 @@ def ReadRecord(DSOFileName, Fields, BD_Info, Index):
 	pointer = bd_file.read(BD_Info[checkdso_size_record])
 
 	#Разбираем запись
+	wline = ""
 	if pointer :
-####################################		integ = struct.unpack(self.UnpackFields[0],pointer)
+		offset_in_record = 0
 
-		if Fields[0][readini_fld_type] == "ftstring" :
-			str_from_pointer = pointer[0:(Fields[0][readini_size]-1)]
+		#перебираем все поля
+		for field in Fields :
+#			print field
+
+			#Читаем текстовое поле
+			if field[readini_fld_type] == "ftstring" :
+				#копируем в строку
+				str_from_pointer = pointer[offset_in_record : offset_in_record+(field[readini_size]-1)]
+				
+				#обрезаем лишнее (после нулевого байта
+				str_from_pointer = str_from_pointer[0:(string.index(str_from_pointer,'\0'))]
+
+				#декодируем строку из виндовс-кодировки
+				str_from_pointer = str_from_pointer.decode('windows-1251')
+#				print "str_from_pointer=", str_from_pointer
+				wline+=str_from_pointer
+				wline+="\t"
+
+			else:
+			#Читаем числа
+				number = struct.unpack( field[readini_unpackstr],pointer[offset_in_record : (offset_in_record+field[readini_size])])
+#				print number[0]
+				wline+=str(number[0])
+				wline+="\t"
+			offset_in_record+=field[readini_size]
+#			print offset_in_record
 			
-			str_from_pointer = str_from_pointer[0:(string.index(str_from_pointer,'\0'))]
+	return wline
 
-			print "str_from_pointer=", str_from_pointer
-			str_from_pointer = str_from_pointer.decode('windows-1251')
-			print "str_from_pointer=", str_from_pointer
-			
-			
-			
-		integ = struct.unpack(Fields[0][readini_unpackstr][1],pointer)
-#			print pointer, integ
-		wline = `integ[0]`
-#			print wline
-
-		pointer = bd_file.read( self.FieldSize[1])
-		integ = unpack(self.UnpackFields[1],pointer)
-#			print pointer, integ[0]
-		wline +="\t"+ `integ[0]`
-
-		print wline
-
-		pointer = bd_file.read( self.FieldSize[2])
-		integ = unpack(self.UnpackFields[2],pointer)
-#			print pointer, integ
-		wline +="\t"+ `integ[0]`+"\n"
-
-		print wline
-		f.write(wline)
-
-		pointer = bd_file.read( self.FieldSize[0])
-#			print "(file_size - bd_file.tell())=", (file_size - bd_file.tell())
-		f.close()
 
 	
 
 	
 def ReadDSO(DSOFileName, Fields, BD_Info):
-	print "\nФайл dso_tools.py функция ReadDSO\n"
+#	print "\nФайл dso_tools.py функция ReadDSO\n"
 	
-	print "\nDSOFN=", DSOFileName,"\nFileds=",Fields, "\nBD_Info = ",BD_Info
+#	print "\nDSOFN=", DSOFileName,"\nFileds=",Fields, "\nBD_Info = ",BD_Info
 	
-	ReadRecord(DSOFileName, Fields,BD_Info, 0)
+	ReadRecord(DSOFileName, Fields,BD_Info, 1)
 
 #
 """import sys, os, stat, string
