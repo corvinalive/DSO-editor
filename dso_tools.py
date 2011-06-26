@@ -41,14 +41,14 @@ def ReadIni(ini_file_name):
 	config.read(ini_file_name)
 
 	if not config.has_section('Fields'):
-		print('В ini файле не обнаружена секция "Fields"')
+		print(u'В ini файле не обнаружена секция "Fields"')
 		sys.exit(0)
 
 	FieldCount = config.getint("Fields","Number")
 #	print "FieldCount=", FieldCount
 
 	if FieldCount <= 0:
-		print('В ini количество полей <= 0 (Fields)')
+		print(u'В ini количество полей <= 0 (Fields)')
 		sys.exit(0)
 
 	Fields =[]
@@ -76,7 +76,7 @@ def ReadIni(ini_file_name):
 			unpackstr='=s'
 			
 		else:
-			print "Ошибка: not found size of type ", fld_type
+			print u"Ошибка: not found size of type ", fld_type
 			sys.exit(0)
 
 		Fields.append((fld_type,fld_name,size, unpackstr))
@@ -90,18 +90,18 @@ def CheckDSO(DSOFileName, Fields):
 	size_record=0
 	for i, item in enumerate(Fields):
 		size_record += item[readini_size]
-	print "Размер одной записи ", size_record
+	print u"Размер одной записи ", size_record
 
 	#вычисление количества записей
 	file_size=os.stat(DSOFileName)[stat.ST_SIZE]
-	print "Размер файла БД в байтах:", file_size
+	print u"Размер файла БД в байтах:", file_size
 
 	records = file_size/size_record
 	kratno = records*size_record - file_size
 	if kratno == 0 :
-		print "ОК: Размер файла кратен размеру записи. Количество записей ", records
+		print u"ОК: Размер файла кратен размеру записи. Количество записей ", records
 	else:
-		print "ОШИБКА: размер файла не кратен размеру записи. Возможно, файл поврежден"
+		print u"ОШИБКА: размер файла не кратен размеру записи. Возможно, файл поврежден"
 		sys.exit(0)
 
 	BD_Info = (file_size, size_record, records)
@@ -118,10 +118,10 @@ def ReadRecord(DSOFileName, Fields, BD_Info, Index):
 	
 	#проверка корректности Index
 	if Index < 0:
-		print('Index меньше 0 и равен ', Index)
+		print(u'Index меньше 0 и равен ', Index)
 		sys.exit(0)	
 	if Index > BD_Info[checkdso_records]:
-		print('Index больше количества записей и равен ', Index, " Колчество записей равно ", BD_Info[checkdso_records])
+		print(u'Index больше количества записей и равен ', Index, " Колчество записей равно ", BD_Info[checkdso_records])
 		sys.exit(0)	
 	#Вычислить смещение
 	offset = Index*BD_Info[checkdso_size_record]
@@ -220,7 +220,7 @@ def WriteRecord(Fields, data_in_str,out_file):
 			out_file.write(out_data)
 
 		else:
-			print "Ошибка при записи в dso: не найдем тип " , field[readini_fld_type]
+			print u"Ошибка при записи в dso: не найдем тип " , field[readini_fld_type]
 			sys.exit(0)
 
 	

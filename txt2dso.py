@@ -55,7 +55,7 @@ Fields=dso_tools.ReadIni(inifn)
 
 if os.path.exists(outfn):
 	os.rename(outfn,backfn)
-	print "Была создана резервная копия файла ",outfn, "под именем ", backfn
+	print u"Была создана резервная копия файла ",outfn, u"под именем ", backfn
 
 #файл со входными данными, имя выходного файла, данные (кортеж) с данными ReadIni
 dso_tools.WriteDSO(args[0],outfn,Fields)
