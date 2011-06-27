@@ -49,9 +49,9 @@ if __name__ == '__main__':
     app = QtGui.QApplication(sys.argv)
     
     #Выбираем файл БД
-    #fileName = QtGui.QFileDialog.getOpenFileName(None,
-    #u"Открыть файл БД", "", "Forward Data base Files (*.dso)")
-    fileName="/home/corvin/Programizm/Python/FWPython/DSO-editor/xset.dso","."
+    fileName = QtGui.QFileDialog.getOpenFileName(None,
+    u"Открыть файл БД", "", "Forward Data base Files (*.dso)")
+    #fileName="/home/corvin/Programizm/Python/FWPython/DSO-editor/xset.dso","."
 
     #Делаем бэкап открываемого файла, если он есть
     t=time.localtime(time.time())
@@ -79,43 +79,25 @@ if __name__ == '__main__':
     columnCount = len(x)
     rowCount = y[dso_tools.checkdso_records]
     
-
-    
     tableWidget =QtGui.QTableWidget()
     tableWidget.setRowCount(rowCount)
     tableWidget.setColumnCount(columnCount)
 
-    rr = dso_tools.ReadRecord(fileName, x, y, 0)
-
-#    newItem = QtGui.QTableWidgetItem(rr[0])
-#    tableWidget.setItem(0,0, newItem)
 
     newItem1 = QtGui.QTableWidgetItem("14")
     tableWidget.setItem(0,1, newItem1)
-    #print rr, len(rr)
-#    for i in range(len(rr)):
-    for i in range(25):
-        print "i=", i," class=", rr[i].__class__
-        s=" ";
-        s=rr[i]
-        if rr[i].__class__ == "<type 'int'>":
-            print "int found"
-            s="int"
+
+    for j in range(rowCount):
+        rr = dso_tools.ReadRecord(fileName, x, y, j)
+        for i in range(len(rr)):
+            s=" ";
+            if x[i][dso_tools.readini_fld_type] == "ftstring" :
+                s=rr[i]
+            else:
+                s=str(rr[i])
         
-        newItem = QtGui.QTableWidgetItem(rr[i])
-        tableWidget.setItem(0,i, newItem)
-    #    if rr[i] == "" :
-     #       print "rr[i]=None"
-      #  else:
-       #     sss=""
-        #    if rr[i].__class__ == "int":
-         #       sss="11"
-            
-          #  elif rr[i].__class__ == "unicode":
-           #     sss = str(rr[i].encode('Utf8'))
-            #print "sss=",sss
-            #newItem = QtGui.QTableWidgetItem(sss)
-            #tableWidget.setItem(0,i, newItem)
+            newItem = QtGui.QTableWidgetItem(s)
+            tableWidget.setItem(j,i, newItem)
 
     tableWidget.show()
     sys.exit(app.exec_())

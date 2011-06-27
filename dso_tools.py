@@ -159,7 +159,7 @@ def ReadRecord(DSOFileName, Fields, BD_Info, Index):
 			#Читаем числа
                 number = struct.unpack( field[readini_unpackstr],pointer[offset_in_record : (offset_in_record+field[readini_size])])
 #				print number[0]
-                wline.append(str(number[0]))
+                wline.append(number[0])
 				#wline+="\t"
             offset_in_record+=field[readini_size]
 #			print offset_in_record
