@@ -117,52 +117,54 @@ def ReadRecord(DSOFileName, Fields, BD_Info, Index):
 #	print "\nDSOFN = ", DSOFileName,"\nFileds = ",Fields, "Index = ", Index
 	
 	#проверка корректности Index
-	if Index < 0:
-		print(u'Index меньше 0 и равен ', Index)
-		sys.exit(0)	
-	if Index > BD_Info[checkdso_records]:
-		print(u'Index больше количества записей и равен ', Index, " Колчество записей равно ", BD_Info[checkdso_records])
-		sys.exit(0)	
+    if Index < 0:
+        print(u'Index меньше 0 и равен ', Index)
+        sys.exit(0)	
+    if Index > BD_Info[checkdso_records]:
+        print(u'Index больше количества записей и равен ', Index, " Колчество записей равно ", BD_Info[checkdso_records])
+        sys.exit(0)	
 	#Вычислить смещение
-	offset = Index*BD_Info[checkdso_size_record]
-	bd_file=open(DSOFileName,'rb')
-	bd_file.seek(offset)
+    offset = Index*BD_Info[checkdso_size_record]
+    bd_file=open(DSOFileName,'rb')
+    bd_file.seek(offset)
 	
 	#Прочитать запись в память
-	pointer = bd_file.read(BD_Info[checkdso_size_record])
-
-	#Разбираем запись
-	wline = ""
-	if pointer :
-		offset_in_record = 0
+    pointer = bd_file.read(BD_Info[checkdso_size_record])
+    #Разбираем запись
+	#wline = ""
+    
+    if pointer :
+        
+        offset_in_record = 0
+        wline = []
 
 		#перебираем все поля
-		for field in Fields :
+        for field in Fields :
 #			print field
 
 			#Читаем текстовое поле
-			if field[readini_fld_type] == "ftstring" :
+            if field[readini_fld_type] == "ftstring" :
 				#копируем в строку
-				str_from_pointer = pointer[offset_in_record : offset_in_record+(field[readini_size]-1)]
+                str_from_pointer = pointer[offset_in_record : offset_in_record+(field[readini_size]-1)]
 				
 				#обрезаем лишнее (после нулевого байта
-				str_from_pointer = str_from_pointer[0:(string.index(str_from_pointer,'\0'))]
+                str_from_pointer = str_from_pointer[0:(string.index(str_from_pointer,'\0'))]
 
 				#декодируем строку из виндовс-кодировки
-				str_from_pointer = str_from_pointer.decode('windows-1251')
-				wline+=str_from_pointer
-				wline+="\t"
+                str_from_pointer = str_from_pointer.decode('windows-1251')
+                wline.append(str_from_pointer)
+				#wline+="\t"
 
-			else:
+            else:
 			#Читаем числа
-				number = struct.unpack( field[readini_unpackstr],pointer[offset_in_record : (offset_in_record+field[readini_size])])
+                number = struct.unpack( field[readini_unpackstr],pointer[offset_in_record : (offset_in_record+field[readini_size])])
 #				print number[0]
-				wline+=str(number[0])
-				wline+="\t"
-			offset_in_record+=field[readini_size]
+                wline.append(str(number[0]))
+				#wline+="\t"
+            offset_in_record+=field[readini_size]
 #			print offset_in_record
 			
-	return wline
+    return wline
 
 
 	
@@ -175,6 +177,7 @@ def ReadDSO(DSOFileName, Fields, BD_Info,out_fn):
 	f = open(out_fn,'wb');
 	for i in range(BD_Info[checkdso_records]):
 		s=ReadRecord(DSOFileName, Fields,BD_Info, i)
+        
 		s+="\n"
 		f.write(s.encode('cp1251'))
 	f.close()
