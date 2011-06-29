@@ -81,6 +81,13 @@ if __name__ == '__main__':
 
     newItem1 = QtGui.QTableWidgetItem("14")
     tableWidget.setItem(0,1, newItem1)
+    
+    #Заполним названия колонок
+    labels=[]
+    for i in x:
+        labels.append(i[dso_tools.readini_fld_name])
+        
+    tableWidget.setHorizontalHeaderLabels(labels)
 
     for j in range(rowCount):
         rr = dso_tools.ReadRecord(fileName, x, y, j)
@@ -95,7 +102,7 @@ if __name__ == '__main__':
             newItem = QtGui.QTableWidgetItem(s)
             tableWidget.setItem(j,i, newItem)
 
-    print Buffer
+    print "len(Buffer)=", len(Buffer), "len(Buffer[0])=",len(Buffer[0])
 
     myapp.show()
     sys.exit(app.exec_())
