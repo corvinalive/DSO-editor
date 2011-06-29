@@ -74,7 +74,7 @@ if __name__ == '__main__':
     columnCount = len(x)
     rowCount = y[dso_tools.checkdso_records]
     
-    tableWidget =myapp.
+    tableWidget =myapp.ui.tableWidget
     tableWidget.setRowCount(rowCount)
     tableWidget.setColumnCount(columnCount)
 
