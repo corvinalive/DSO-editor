@@ -21,44 +21,36 @@
 #       Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
 #       MA 02110-1301, USA.
 
-
-#import PySide.QtCore #import *
-#import PySide.QtGui #import *
-#import sys
- 
- 
-# Create a Qt application 
-#app = QApplication(sys.argv)
-# Create a Label and show it
-#label = QTableView ()
-#label.show()
-# Enter Qt application main loop
-#app.exec_()
-#sys.exit()
-
-	
-
 from PySide import QtCore, QtGui, QtSql
 import dso_tools
-import time, string, os, shutil
+import time, string, os, shutil, sys
+from dso_gui import Ui_MainWindow
+
+
+class MyMainWindow(QtGui.QMainWindow):
+    def __init__(self, parent=None):
+        super(MyMainWindow, self).__init__(parent)
+        self.ui = Ui_MainWindow()
+        self.ui.setupUi(self)
 
 
 
 if __name__ == '__main__':
-    import sys
     app = QtGui.QApplication(sys.argv)
+    myapp = MyMainWindow()
+
     
     #Выбираем файл БД
-    fileName = QtGui.QFileDialog.getOpenFileName(None,
-    u"Открыть файл БД", "", "Forward Data base Files (*.dso)")
-    #fileName="/home/corvin/Programizm/Python/FWPython/DSO-editor/xset.dso","."
+    #fileName = QtGui.QFileDialog.getOpenFileName(None,
+    #u"Открыть файл БД", "", "Forward Data base Files (*.dso)")
+    fileName="/home/corvin/Programizm/Python/FWPython/DSO-editor/xset.dso","."
 
     #Делаем бэкап открываемого файла, если он есть
     t=time.localtime(time.time())
     backfn=fileName[0]+" "+str(t[0])+" "+string.zfill(str(t[1]),2)+" "+string.zfill(str(t[2]),2)+" "+string.zfill(str(t[3]),2)+string.zfill(str(t[4]),2)+string.zfill(str(t[5]),2)
     
     if os.path.exists(fileName[0]):
-        shutil.copyfile(fileName[0],backfn)
+        #shutil.copyfile(fileName[0],backfn)
         print u"Была создана резервная копия файла ",fileName, u"под именем ", backfn
     else:
         sys.exit(app.exec_())
@@ -76,10 +68,13 @@ if __name__ == '__main__':
     #Проверяем размер записи, кол-во записей
     y=dso_tools.CheckDSO(fileName,x)
     
+    #Буффер с данными
+    Buffer =[]
+    
     columnCount = len(x)
     rowCount = y[dso_tools.checkdso_records]
     
-    tableWidget =QtGui.QTableWidget()
+    tableWidget =myapp.
     tableWidget.setRowCount(rowCount)
     tableWidget.setColumnCount(columnCount)
 
@@ -89,6 +84,7 @@ if __name__ == '__main__':
 
     for j in range(rowCount):
         rr = dso_tools.ReadRecord(fileName, x, y, j)
+        Buffer.append(rr)
         for i in range(len(rr)):
             s=" ";
             if x[i][dso_tools.readini_fld_type] == "ftstring" :
@@ -99,5 +95,7 @@ if __name__ == '__main__':
             newItem = QtGui.QTableWidgetItem(s)
             tableWidget.setItem(j,i, newItem)
 
-    tableWidget.show()
+    print Buffer
+
+    myapp.show()
     sys.exit(app.exec_())
