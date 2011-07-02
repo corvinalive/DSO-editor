@@ -27,18 +27,66 @@ import time, string, os, shutil, sys
 from dso_gui import Ui_MainWindow
 
 
+class DSODB:
+    def __init__(self,dso_filename):
+        #Читаем ini-файл
+        inifn=dso_filename
+        inifn=inifn[0:(len(inifn)-4)]
+        inifn+=".ini"
+        print inifn
+    
+        #Читаем и и разбираем ini-фалй
+        self.ini_data=dso_tools.ReadIni(inifn)
+    
+        #Проверяем размер записи, кол-во записей
+        self.dso_info=dso_tools.CheckDSO(dso_filename,self.ini_data)
+    
+        #Буффер с данными
+        self.Buffer =[]
+        #Читаем файл в буфер
+        for j in range(self.dso_info[dso_tools.checkdso_records]):
+            rr = dso_tools.ReadRecord(dso_filename, self.ini_data, self.dso_info, j)
+            self.Buffer.append(rr)
+            
+    def GetColCount(self):
+        return len(self.Buffer[0])
+            
+    def GetRowCount(self):
+        return len(self.Buffer)
+
 class MyMainWindow(QtGui.QMainWindow):
     def __init__(self, parent=None):
         super(MyMainWindow, self).__init__(parent)
         self.ui = Ui_MainWindow()
         self.ui.setupUi(self)
-
-
+    
+    def FillTable(self,dsodata):
+        columnCount = dsodata.GetColCount()
+        rowCount = dsodata.GetRowCount()
+    
+        tableWidget =self.ui.tableWidget
+        tableWidget.setRowCount(rowCount)
+        tableWidget.setColumnCount(columnCount)
+        #Заполним названия колонок
+        labels=[]
+        for i in dsodata.ini_data:
+            labels.append(i[dso_tools.readini_fld_name])
+        tableWidget.setHorizontalHeaderLabels(labels)
+        #заполним содержимое ячеек
+        for j in range(rowCount):
+            record=dsodata.Buffer[j]
+            for i in range(len(record)):
+                s=" ";
+                if dsodata.ini_data[i][dso_tools.readini_fld_type] == "ftstring" :
+                    s=record[i]
+                else:
+                    s=str(record[i])
+                newItem = QtGui.QTableWidgetItem(s)
+                tableWidget.setItem(j,i, newItem)
 
 if __name__ == '__main__':
     app = QtGui.QApplication(sys.argv)
     myapp = MyMainWindow()
-
     
     #Выбираем файл БД
     #fileName = QtGui.QFileDialog.getOpenFileName(None,
@@ -46,63 +94,18 @@ if __name__ == '__main__':
     fileName="/home/corvin/Programizm/Python/FWPython/DSO-editor/xset.dso","."
 
     #Делаем бэкап открываемого файла, если он есть
-    t=time.localtime(time.time())
-    backfn=fileName[0]+" "+str(t[0])+" "+string.zfill(str(t[1]),2)+" "+string.zfill(str(t[2]),2)+" "+string.zfill(str(t[3]),2)+string.zfill(str(t[4]),2)+string.zfill(str(t[5]),2)
+    #t=time.localtime(time.time())
+    #backfn=fileName[0]+" "+str(t[0])+" "+string.zfill(str(t[1]),2)+" "+string.zfill(str(t[2]),2)+" "+string.zfill(str(t[3]),2)+string.zfill(str(t[4]),2)+string.zfill(str(t[5]),2)
     
     if os.path.exists(fileName[0]):
         #shutil.copyfile(fileName[0],backfn)
-        print u"Была создана резервная копия файла ",fileName, u"под именем ", backfn
+        print u"Была создана резервная копия файла ",fileName, u"под именем "#, backfn
     else:
         sys.exit(app.exec_())
 
     fileName=fileName[0]
-    #Читаем ini-файл
-    inifn=fileName
-    inifn=inifn[0:(len(inifn)-4)]
-    inifn+=".ini"
-    print inifn
-    
-    #Читаем и и разбираем ini-фалй
-    x=dso_tools.ReadIni(inifn)
-    
-    #Проверяем размер записи, кол-во записей
-    y=dso_tools.CheckDSO(fileName,x)
-    
-    #Буффер с данными
-    Buffer =[]
-    
-    columnCount = len(x)
-    rowCount = y[dso_tools.checkdso_records]
-    
-    tableWidget =myapp.ui.tableWidget
-    tableWidget.setRowCount(rowCount)
-    tableWidget.setColumnCount(columnCount)
-
-
-    newItem1 = QtGui.QTableWidgetItem("14")
-    tableWidget.setItem(0,1, newItem1)
-    
-    #Заполним названия колонок
-    labels=[]
-    for i in x:
-        labels.append(i[dso_tools.readini_fld_name])
-        
-    tableWidget.setHorizontalHeaderLabels(labels)
-
-    for j in range(rowCount):
-        rr = dso_tools.ReadRecord(fileName, x, y, j)
-        Buffer.append(rr)
-        for i in range(len(rr)):
-            s=" ";
-            if x[i][dso_tools.readini_fld_type] == "ftstring" :
-                s=rr[i]
-            else:
-                s=str(rr[i])
-        
-            newItem = QtGui.QTableWidgetItem(s)
-            tableWidget.setItem(j,i, newItem)
-
-    print "len(Buffer)=", len(Buffer), "len(Buffer[0])=",len(Buffer[0])
+    dsodata = DSODB(fileName)
+    myapp.FillTable(dsodata)
 
     myapp.show()
     sys.exit(app.exec_())
