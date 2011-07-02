@@ -226,7 +226,41 @@ def WriteRecord(Fields, data_in_str,out_file):
 			print u"Ошибка при записи в dso: не найдем тип " , field[readini_fld_type]
 			sys.exit(0)
 
-	
+def WriteRecord2(out_file, record, ini_data):
+	#перебираем все поля записи
+    offset = 0
+    fieldcount=len(ini_data)
+    for i in range(fieldcount):
+        field = ini_data[i]
+        data=record[i]
+		#Записываем текстовое поле
+        if field[readini_fld_type] == "ftstring" :
+            print "data=",data
+            str_fmt = str(field[readini_size])
+            str_fmt+="s"
+            if len(data) == 0:
+                emptystr=""
+                out_data = struct.pack(str_fmt,emptystr.encode('windows-1251'))
+            else:
+                out_data = struct.pack(str_fmt,data.encode('windows-1251'))
+			#пишем в файл
+            out_file.write(out_data)
+			
+        elif field[readini_fld_type] == "ftinteger" :
+		#Пишем числа integer
+            out_data = struct.pack("i",data)
+            #пишем в файл
+            out_file.write(out_data)
+			
+        elif field[readini_fld_type] == "ftfloat" :
+            #Пишем числа float
+            out_data = struct.pack("d",data)
+            #пишем в файл
+            out_file.write(out_data)
+        else:
+            print u"Ошибка при записи в dso: не найдем тип " , field[readini_fld_type]
+            sys.exit(0)
+
 
 #Функция записи из текстовика в файл БД
 #файл со входными данными, имя выходного файла, данные (кортеж) с данными ReadIni

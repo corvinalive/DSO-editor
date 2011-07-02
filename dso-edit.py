@@ -129,9 +129,29 @@ class LinkedList:
             old = curr  
             curr = curr.next
             count += 1
+            
+    def ItemAt(self,i):
+        #Вернуть первый элемент, если i==0
+        if i==0:
+            return self.first
+        #Перебираем элементы
+        if self.first == None:
+            return None
+        index=0
+        current=self.first
+        while 1:
+            index+=1
+            current=current.next
+            if index==i:
+                return current
+            if current==None:
+                return None
+
+        
         
 class DSODB:
     def __init__(self,dso_filename):
+        self.dso_filename=dso_filename
         #Читаем ini-файл
         inifn=dso_filename
         inifn=inifn[0:(len(inifn)-4)]
@@ -176,6 +196,22 @@ class DSODB:
         print newrecord
         self.Buffer.InsertNth(index,newrecord)
         print "addrow return"
+        
+    def Save(self):
+        f_out = open(self.dso_filename,'wb')
+
+        #Перебираем записи и пишем их
+        current=self.Buffer.first
+        while 1:
+            if current == None:
+                return
+            print current.value
+            dso_tools.WriteRecord2(f_out, current.value, self.ini_data)
+            current=current.next
+            
+        f_out.close()
+        
+        
 
 
 class MyMainWindow(QtGui.QMainWindow):
@@ -209,20 +245,36 @@ class MyMainWindow(QtGui.QMainWindow):
             self.ui.tableWidget.removeRow(i)
             print "Filltable() ok"
         
+    def Add(self,index):
+        irow=index
+        self.dsodata.addRow(irow)
+        self.ui.tableWidget.insertRow(irow)
+        #заполним информацию
+        recvalue=self.dsodata.Buffer.ItemAt(irow).value
+        for i in range(len(recvalue)):
+            s=" ";
+            if self.dsodata.ini_data[i][dso_tools.readini_fld_type] == "ftstring" :
+                s=recvalue[i]
+            else:
+                s=str(recvalue[i])
+            newItem = QtGui.QTableWidgetItem(s)
+            self.ui.tableWidget.setItem(irow,i,newItem)
 
     def pushButtonaddbefore(self):
-        self.dsodata.addRow(self.ui.tableWidget.currentRow())
-        self.FillTable()
+        irow=self.ui.tableWidget.currentRow()
+        self.Add(irow)
+        
 
     def pushButtonaddafter(self):
-        self.dsodata.addRow(self.ui.tableWidget.currentRow()+1)
-        self.FillTable()
+        irow=self.ui.tableWidget.currentRow()+1
+        self.Add(irow)
 
     def pushButtonsavenexit(self):
-        s=":SA"'\15'
+        self.dsodata.Save()
+        self.close()
 
     def pushButtonexitwosave(self):
-        s=":SA"'\15'
+        self.close()
     
     def SetData(self,dsodata):
         self.dsodata=dsodata
