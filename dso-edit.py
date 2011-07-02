@@ -74,22 +74,40 @@ class LinkedList:
    
    #добавить в указаннную позицию
     def InsertNth(self,i,x):
+        print "insert into list. i=",i
+        
+        #если список пустой
         if (self.first == None):
             self.first = Node(x,self.first)
             self.last = self.first.next
             return
+        #Если вставка в начало списка
         if i == 0:
-          self.first = Node(x,self.first)
-          return
+            self.first = Node(x,self.first)
+            return
+        count=self.Len()
+        #вставка в конец списка
+        if i>=count:
+            print "вставлено в конец списка"
+            exlast=self.last
+            self.last=Node(x)
+            exlast.next=self.last
+            return
+            
+        #вставка в середину списка
         curr=self.first
+        print curr
         count = 0
-        while curr != None:
+        while 1:
+            print "count=",count
             if count == i-1:
-              curr.next = Node(x,curr.next)
-              if curr.next.next == None:
-                self.last = curr.next
-              break
+                curr.next = Node(x,curr.next)
+                print "Вставлено!"
+                if curr.next.next == None:
+                    self.last = curr.next
+                break
             curr = curr.next
+            count+=1
    
     def Del(self,i):
         if (self.first == None):
@@ -143,6 +161,7 @@ class DSODB:
         self.Buffer.Del(index)
     
     def addRow(self,index):
+        print "addrow index=",index
         newrecord = []
         for i in range(len(self.ini_data)):
             s=" ";
@@ -156,6 +175,7 @@ class DSODB:
                 print "ERROR! at DSODB.addRow() неизвестный тип"
         print newrecord
         self.Buffer.InsertNth(index,newrecord)
+        print "addrow return"
 
 
 class MyMainWindow(QtGui.QMainWindow):
@@ -185,8 +205,8 @@ class MyMainWindow(QtGui.QMainWindow):
             print "button delete pressed. now call self.dsodata.delRow(i)"
             self.dsodata.delRow(i)
             print "self.dsodata.delRow(i) is ok. now call Filltable()"
-            self.FillTable()
-            #self.ui.tableWidget.removeRow(i)
+            #self.FillTable()
+            self.ui.tableWidget.removeRow(i)
             print "Filltable() ok"
         
 
@@ -217,6 +237,7 @@ class MyMainWindow(QtGui.QMainWindow):
         tableWidget =self.ui.tableWidget
         tableWidget.setRowCount(rowCount)
         tableWidget.setColumnCount(columnCount)
+        print "Now will call clear()"
         tableWidget.clear()
         print "Set row n col count completed"
         #Заполним названия колонок
@@ -228,7 +249,7 @@ class MyMainWindow(QtGui.QMainWindow):
         #заполним содержимое ячеек
         record=self.dsodata.Buffer.first
         for j in range(rowCount):
-            print "заполняем строку ",j
+            #print "заполняем строку ",j
             recvalue=record.value
             for i in range(len(recvalue)):
                 s=" ";
@@ -239,6 +260,7 @@ class MyMainWindow(QtGui.QMainWindow):
                 newItem = QtGui.QTableWidgetItem(s)
                 tableWidget.setItem(j,i, newItem)
             record=record.next
+        print "Таблица заполнена"
 
 if __name__ == '__main__':
     app = QtGui.QApplication(sys.argv)
