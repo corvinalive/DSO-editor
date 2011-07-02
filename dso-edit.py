@@ -53,31 +53,90 @@ class DSODB:
             
     def GetRowCount(self):
         return len(self.Buffer)
+    
+    def delRow(self,index):
+        del self.Buffer[index]
+    
+    def addRow(self,index):
+        newrecord = []
+        for i in range(len(self.ini_data)):
+            s=" ";
+            if self.ini_data[i][dso_tools.readini_fld_type] == "ftstring" :
+                newrecord.append(u"")
+            elif self.ini_data[i][dso_tools.readini_fld_type] == "ftfloat":
+                newrecord.append(0.0)
+            elif self.ini_data[i][dso_tools.readini_fld_type] == "ftinteger":
+                newrecord.append(0)
+            else:
+                print "ERROR! at DSODB.addRow() неизвестный тип"
+        print newrecord
+        self.Buffer.insert(index,newrecord)
+
 
 class MyMainWindow(QtGui.QMainWindow):
     def __init__(self, parent=None):
         super(MyMainWindow, self).__init__(parent)
         self.ui = Ui_MainWindow()
         self.ui.setupUi(self)
+        self.connect(self.ui.delRowButton, QtCore.SIGNAL("clicked()"), self.pushButtondelete)
+        self.connect(self.ui.AddRowBeforeButton, QtCore.SIGNAL("clicked()"), self.pushButtonaddbefore)
+        self.connect(self.ui.AddButtonAfterButton, QtCore.SIGNAL("clicked()"), self.pushButtonaddafter)
+        self.connect(self.ui.SavenExitButton, QtCore.SIGNAL("clicked()"), self.pushButtonsavenexit)
+        self.connect(self.ui.ClosewoSaveButton, QtCore.SIGNAL("clicked()"), self.pushButtonexitwosave)
+
+
+    def pushButtondelete(self):
+        i = self.ui.tableWidget.currentRow()
+        msgBox = QtGui.QMessageBox()
+        msgBox.setText(u"Удаление строки")
+        msg=u"Удалить строку номер "
+        msg+=str(i)
+        print msg
+        msgBox.setInformativeText(msg)
+        msgBox.setStandardButtons(QtGui.QMessageBox.Yes | QtGui.QMessageBox.No )
+        msgBox.setDefaultButton(QtGui.QMessageBox.No)
+        ret=msgBox.exec_()
+        if ret == QtGui.QMessageBox.Yes:
+            self.dsodata.delRow(i)
+            self.FillTable()
+        
+
+    def pushButtonaddbefore(self):
+        self.dsodata.addRow(self.ui.tableWidget.currentRow())
+        self.FillTable()
+
+    def pushButtonaddafter(self):
+        self.dsodata.addRow(self.ui.tableWidget.currentRow()+1)
+        self.FillTable()
+
+    def pushButtonsavenexit(self):
+        s=":SA"'\15'
+
+    def pushButtonexitwosave(self):
+        s=":SA"'\15'
     
-    def FillTable(self,dsodata):
-        columnCount = dsodata.GetColCount()
-        rowCount = dsodata.GetRowCount()
+    def SetData(self,dsodata):
+        self.dsodata=dsodata
+        self.FillTable()
+        
+    def FillTable(self):
+        columnCount = self.dsodata.GetColCount()
+        rowCount = self.dsodata.GetRowCount()
     
         tableWidget =self.ui.tableWidget
         tableWidget.setRowCount(rowCount)
         tableWidget.setColumnCount(columnCount)
         #Заполним названия колонок
         labels=[]
-        for i in dsodata.ini_data:
+        for i in self.dsodata.ini_data:
             labels.append(i[dso_tools.readini_fld_name])
         tableWidget.setHorizontalHeaderLabels(labels)
         #заполним содержимое ячеек
         for j in range(rowCount):
-            record=dsodata.Buffer[j]
+            record=self.dsodata.Buffer[j]
             for i in range(len(record)):
                 s=" ";
-                if dsodata.ini_data[i][dso_tools.readini_fld_type] == "ftstring" :
+                if self.dsodata.ini_data[i][dso_tools.readini_fld_type] == "ftstring" :
                     s=record[i]
                 else:
                     s=str(record[i])
@@ -89,9 +148,9 @@ if __name__ == '__main__':
     myapp = MyMainWindow()
     
     #Выбираем файл БД
-    #fileName = QtGui.QFileDialog.getOpenFileName(None,
-    #u"Открыть файл БД", "", "Forward Data base Files (*.dso)")
-    fileName="/home/corvin/Programizm/Python/FWPython/DSO-editor/xset.dso","."
+    fileName = QtGui.QFileDialog.getOpenFileName(None,
+    u"Открыть файл БД", "", "Forward Data base Files (*.dso)")
+    #fileName="/home/corvin/Programizm/Python/FWPython/DSO-editor/xset.dso","."
 
     #Делаем бэкап открываемого файла, если он есть
     #t=time.localtime(time.time())
@@ -105,7 +164,7 @@ if __name__ == '__main__':
 
     fileName=fileName[0]
     dsodata = DSODB(fileName)
-    myapp.FillTable(dsodata)
+    myapp.SetData(dsodata)
 
     myapp.show()
     sys.exit(app.exec_())
