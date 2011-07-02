@@ -26,7 +26,92 @@ import dso_tools
 import time, string, os, shutil, sys
 from dso_gui import Ui_MainWindow
 
+class Node:
+    def __init__(self, value = None, next = None):
+        self.value = value
+        self.next = next
+        
+class LinkedList:
+    def __init__(self):
+        self.first = None
+        self.last = None
+        self.length = 0
 
+    def __str__(self):
+        if self.first != None:
+            current = self.first
+            out = 'LinkedList [\n' +str(current.value) +'\n'
+            while current.next != None:
+                current = current.next
+                out += str(current.value) + '\n'
+            return out + ']'
+        return 'LinkedList []'
+
+    def clear(self):
+        self.__init__()
+    #добавление в конец списка
+    def add(self, x):
+        if self.first == None:
+            self.first = Node(x, None)
+            self.last = self.first
+        elif self.last == self.first:
+            self.last = Node(x, None)
+            self.first.next = self.last
+        else:
+            current = Node(x, None)
+            self.last.next = current
+            self.last = current                
+        
+    def Len(self):
+        self.length =0
+        if self.first != None:
+            self.length +=1
+            current = self.first
+            while current.next != None:
+                current = current.next
+                self.length +=1
+        return self.length
+   
+   #добавить в указаннную позицию
+    def InsertNth(self,i,x):
+        if (self.first == None):
+            self.first = Node(x,self.first)
+            self.last = self.first.next
+            return
+        if i == 0:
+          self.first = Node(x,self.first)
+          return
+        curr=self.first
+        count = 0
+        while curr != None:
+            if count == i-1:
+              curr.next = Node(x,curr.next)
+              if curr.next.next == None:
+                self.last = curr.next
+              break
+            curr = curr.next
+   
+    def Del(self,i):
+        if (self.first == None):
+          return
+        old = curr = self.first
+        count = 0
+        if i == 0:
+          self.first = self.first.next
+          return
+        while curr != None:
+            print "count=",count," index=",i
+            if count == i:
+              if curr.next == self.last:
+                self.last = curr
+                break
+              else:
+                old.next = curr.next 
+              break
+            old = curr  
+            curr = curr.next
+            count += 1
+        
 class DSODB:
     def __init__(self,dso_filename):
         #Читаем ini-файл
@@ -42,20 +127,20 @@ class DSODB:
         self.dso_info=dso_tools.CheckDSO(dso_filename,self.ini_data)
     
         #Буффер с данными
-        self.Buffer =[]
+        self.Buffer = LinkedList()
         #Читаем файл в буфер
         for j in range(self.dso_info[dso_tools.checkdso_records]):
             rr = dso_tools.ReadRecord(dso_filename, self.ini_data, self.dso_info, j)
-            self.Buffer.append(rr)
+            self.Buffer.add(rr)
             
     def GetColCount(self):
-        return len(self.Buffer[0])
+        return len(self.ini_data)
             
     def GetRowCount(self):
-        return len(self.Buffer)
+        return self.Buffer.Len()
     
     def delRow(self,index):
-        del self.Buffer[index]
+        self.Buffer.Del(index)
     
     def addRow(self,index):
         newrecord = []
@@ -70,7 +155,7 @@ class DSODB:
             else:
                 print "ERROR! at DSODB.addRow() неизвестный тип"
         print newrecord
-        self.Buffer.insert(index,newrecord)
+        self.Buffer.InsertNth(index,newrecord)
 
 
 class MyMainWindow(QtGui.QMainWindow):
@@ -97,8 +182,12 @@ class MyMainWindow(QtGui.QMainWindow):
         msgBox.setDefaultButton(QtGui.QMessageBox.No)
         ret=msgBox.exec_()
         if ret == QtGui.QMessageBox.Yes:
+            print "button delete pressed. now call self.dsodata.delRow(i)"
             self.dsodata.delRow(i)
+            print "self.dsodata.delRow(i) is ok. now call Filltable()"
             self.FillTable()
+            #self.ui.tableWidget.removeRow(i)
+            print "Filltable() ok"
         
 
     def pushButtonaddbefore(self):
@@ -121,27 +210,35 @@ class MyMainWindow(QtGui.QMainWindow):
         
     def FillTable(self):
         columnCount = self.dsodata.GetColCount()
+        print "Columncount=", columnCount
         rowCount = self.dsodata.GetRowCount()
+        print "rowcount=",rowCount
     
         tableWidget =self.ui.tableWidget
         tableWidget.setRowCount(rowCount)
         tableWidget.setColumnCount(columnCount)
+        tableWidget.clear()
+        print "Set row n col count completed"
         #Заполним названия колонок
         labels=[]
         for i in self.dsodata.ini_data:
             labels.append(i[dso_tools.readini_fld_name])
         tableWidget.setHorizontalHeaderLabels(labels)
+        print "заполнили заголовки"
         #заполним содержимое ячеек
+        record=self.dsodata.Buffer.first
         for j in range(rowCount):
-            record=self.dsodata.Buffer[j]
-            for i in range(len(record)):
+            print "заполняем строку ",j
+            recvalue=record.value
+            for i in range(len(recvalue)):
                 s=" ";
                 if self.dsodata.ini_data[i][dso_tools.readini_fld_type] == "ftstring" :
-                    s=record[i]
+                    s=recvalue[i]
                 else:
-                    s=str(record[i])
+                    s=str(recvalue[i])
                 newItem = QtGui.QTableWidgetItem(s)
                 tableWidget.setItem(j,i, newItem)
+            record=record.next
 
 if __name__ == '__main__':
     app = QtGui.QApplication(sys.argv)
