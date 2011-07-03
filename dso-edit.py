@@ -219,13 +219,42 @@ class MyMainWindow(QtGui.QMainWindow):
         super(MyMainWindow, self).__init__(parent)
         self.ui = Ui_MainWindow()
         self.ui.setupUi(self)
+        self.now_is_insert_row = False
         self.connect(self.ui.delRowButton, QtCore.SIGNAL("clicked()"), self.pushButtondelete)
         self.connect(self.ui.AddRowBeforeButton, QtCore.SIGNAL("clicked()"), self.pushButtonaddbefore)
         self.connect(self.ui.AddButtonAfterButton, QtCore.SIGNAL("clicked()"), self.pushButtonaddafter)
         self.connect(self.ui.SavenExitButton, QtCore.SIGNAL("clicked()"), self.pushButtonsavenexit)
         self.connect(self.ui.ClosewoSaveButton, QtCore.SIGNAL("clicked()"), self.pushButtonexitwosave)
+        #self.connect(self.ui.tableWidget, QtCore.SIGNAL("cellChanged()"), self.CellDataSave)
+        self.ui.tableWidget.connect(self.ui.tableWidget, QtCore.SIGNAL("cellChanged(int, int)"),self.CellDataSave)
 
-
+    def CellDataSave(self,row,column):
+        if self.now_is_insert_row == False:
+            print "Data changed in row=",row," column=",column
+            item = self.ui.tableWidget.item(row,column)
+            print item.text()
+            #Найдем строку в данных
+            record = self.dsodata.Buffer.ItemAt(row)
+            print "Record.value=",record.value
+            if self.dsodata.ini_data[column][dso_tools.readini_fld_type] == "ftstring" :
+                record.value[column]=item.text()
+            elif self.dsodata.ini_data[column][dso_tools.readini_fld_type] == "ftfloat":
+                val = 0.0
+                try:
+                    val = string.atof(item.text())
+                except ValueError, TypeError:
+                    pass
+                record.value[column]=val
+                item.setText(str(val))
+            elif self.dsodata.ini_data[column][dso_tools.readini_fld_type] == "ftinteger":
+                val = 0
+                try:
+                    val = string.atoi(item.text())
+                except ValueError, TypeError:
+                    pass
+                record.value[column]=val
+                item.setText(str(val))
+        
     def pushButtondelete(self):
         i = self.ui.tableWidget.currentRow()
         msgBox = QtGui.QMessageBox()
@@ -248,6 +277,7 @@ class MyMainWindow(QtGui.QMainWindow):
     def Add(self,index):
         irow=index
         self.dsodata.addRow(irow)
+        self.now_is_insert_row=True
         self.ui.tableWidget.insertRow(irow)
         #заполним информацию
         recvalue=self.dsodata.Buffer.ItemAt(irow).value
@@ -259,6 +289,7 @@ class MyMainWindow(QtGui.QMainWindow):
                 s=str(recvalue[i])
             newItem = QtGui.QTableWidgetItem(s)
             self.ui.tableWidget.setItem(irow,i,newItem)
+        self.now_is_insert_row = False
 
     def pushButtonaddbefore(self):
         irow=self.ui.tableWidget.currentRow()
@@ -281,6 +312,7 @@ class MyMainWindow(QtGui.QMainWindow):
         self.FillTable()
         
     def FillTable(self):
+        self.now_is_insert_row = True
         columnCount = self.dsodata.GetColCount()
         print "Columncount=", columnCount
         rowCount = self.dsodata.GetRowCount()
@@ -313,6 +345,7 @@ class MyMainWindow(QtGui.QMainWindow):
                 tableWidget.setItem(j,i, newItem)
             record=record.next
         print "Таблица заполнена"
+        self.now_is_insert_row = False
 
 if __name__ == '__main__':
     app = QtGui.QApplication(sys.argv)
