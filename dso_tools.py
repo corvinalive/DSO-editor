@@ -235,7 +235,7 @@ def WriteRecord2(out_file, record, ini_data):
         data=record[i]
 		#Записываем текстовое поле
         if field[readini_fld_type] == "ftstring" :
-            print "data=",data
+            #print "data=",data
             str_fmt = str(field[readini_size])
             str_fmt+="s"
             if len(data) == 0:

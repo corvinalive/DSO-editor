@@ -74,7 +74,7 @@ class LinkedList:
    
    #добавить в указаннную позицию
     def InsertNth(self,i,x):
-        print "insert into list. i=",i
+        #print "insert into list. i=",i
         
         #если список пустой
         if (self.first == None):
@@ -88,7 +88,7 @@ class LinkedList:
         count=self.Len()
         #вставка в конец списка
         if i>=count:
-            print "вставлено в конец списка"
+            #print "вставлено в конец списка"
             exlast=self.last
             self.last=Node(x)
             exlast.next=self.last
@@ -96,13 +96,13 @@ class LinkedList:
             
         #вставка в середину списка
         curr=self.first
-        print curr
+        #print curr
         count = 0
         while 1:
-            print "count=",count
+            #print "count=",count
             if count == i-1:
                 curr.next = Node(x,curr.next)
-                print "Вставлено!"
+                #print "Вставлено!"
                 if curr.next.next == None:
                     self.last = curr.next
                 break
@@ -118,7 +118,7 @@ class LinkedList:
           self.first = self.first.next
           return
         while curr != None:
-            print "count=",count," index=",i
+            #print "count=",count," index=",i
             if count == i:
               if curr.next == self.last:
                 self.last = curr
@@ -146,7 +146,6 @@ class LinkedList:
                 return current
             if current==None:
                 return None
-
         
         
 class DSODB:
@@ -156,7 +155,7 @@ class DSODB:
         inifn=dso_filename
         inifn=inifn[0:(len(inifn)-4)]
         inifn+=".ini"
-        print inifn
+        #print inifn
     
         #Читаем и и разбираем ini-фалй
         self.ini_data=dso_tools.ReadIni(inifn)
@@ -181,7 +180,7 @@ class DSODB:
         self.Buffer.Del(index)
     
     def addRow(self,index):
-        print "addrow index=",index
+        #print "addrow index=",index
         newrecord = []
         for i in range(len(self.ini_data)):
             s=" ";
@@ -193,26 +192,35 @@ class DSODB:
                 newrecord.append(0)
             else:
                 print "ERROR! at DSODB.addRow() неизвестный тип"
-        print newrecord
+        #print newrecord
         self.Buffer.InsertNth(index,newrecord)
-        print "addrow return"
+        #print "addrow return"
         
     def Save(self):
-        f_out = open(self.dso_filename,'wb')
+        #Делаем бэкап открываемого файла, если он есть
+        fn = os.path.split(self.dso_filename)
+        t=time.localtime(time.time())
+        fnn=str(t[0])+" "+string.zfill(str(t[1]),2)+" "+string.zfill(str(t[2]),2)\
+                +" "+string.zfill(str(t[3]),2)+string.zfill(str(t[4]),2)\
+                +string.zfill(str(t[5]),2)+" "+fn[1]
+        backfn = os.path.join(fn[0],fnn)
+        #print "backfn=",backfn
+        if os.path.exists(self.dso_filename):
+            shutil.copyfile(self.dso_filename,backfn)
+            print u"Была создана резервная копия файла ",self.dso_filename, u"под именем ", backfn
+        else:
+            sys.exit(app.exec_())
 
+        f_out = open(self.dso_filename,'wb')
         #Перебираем записи и пишем их
         current=self.Buffer.first
         while 1:
             if current == None:
                 return
-            print current.value
+            #print current.value
             dso_tools.WriteRecord2(f_out, current.value, self.ini_data)
             current=current.next
-            
         f_out.close()
-        
-        
-
 
 class MyMainWindow(QtGui.QMainWindow):
     def __init__(self, parent=None):
@@ -225,17 +233,16 @@ class MyMainWindow(QtGui.QMainWindow):
         self.connect(self.ui.AddButtonAfterButton, QtCore.SIGNAL("clicked()"), self.pushButtonaddafter)
         self.connect(self.ui.SavenExitButton, QtCore.SIGNAL("clicked()"), self.pushButtonsavenexit)
         self.connect(self.ui.ClosewoSaveButton, QtCore.SIGNAL("clicked()"), self.pushButtonexitwosave)
-        #self.connect(self.ui.tableWidget, QtCore.SIGNAL("cellChanged()"), self.CellDataSave)
         self.ui.tableWidget.connect(self.ui.tableWidget, QtCore.SIGNAL("cellChanged(int, int)"),self.CellDataSave)
 
     def CellDataSave(self,row,column):
         if self.now_is_insert_row == False:
-            print "Data changed in row=",row," column=",column
+            #print "Data changed in row=",row," column=",column
             item = self.ui.tableWidget.item(row,column)
-            print item.text()
+            #print item.text()
             #Найдем строку в данных
             record = self.dsodata.Buffer.ItemAt(row)
-            print "Record.value=",record.value
+            #print "Record.value=",record.value
             if self.dsodata.ini_data[column][dso_tools.readini_fld_type] == "ftstring" :
                 record.value[column]=item.text()
             elif self.dsodata.ini_data[column][dso_tools.readini_fld_type] == "ftfloat":
@@ -261,18 +268,13 @@ class MyMainWindow(QtGui.QMainWindow):
         msgBox.setText(u"Удаление строки")
         msg=u"Удалить строку номер "
         msg+=str(i)
-        print msg
         msgBox.setInformativeText(msg)
         msgBox.setStandardButtons(QtGui.QMessageBox.Yes | QtGui.QMessageBox.No )
         msgBox.setDefaultButton(QtGui.QMessageBox.No)
         ret=msgBox.exec_()
         if ret == QtGui.QMessageBox.Yes:
-            print "button delete pressed. now call self.dsodata.delRow(i)"
             self.dsodata.delRow(i)
-            print "self.dsodata.delRow(i) is ok. now call Filltable()"
-            #self.FillTable()
             self.ui.tableWidget.removeRow(i)
-            print "Filltable() ok"
         
     def Add(self,index):
         irow=index
@@ -314,26 +316,20 @@ class MyMainWindow(QtGui.QMainWindow):
     def FillTable(self):
         self.now_is_insert_row = True
         columnCount = self.dsodata.GetColCount()
-        print "Columncount=", columnCount
         rowCount = self.dsodata.GetRowCount()
-        print "rowcount=",rowCount
     
         tableWidget =self.ui.tableWidget
         tableWidget.setRowCount(rowCount)
         tableWidget.setColumnCount(columnCount)
-        print "Now will call clear()"
         tableWidget.clear()
-        print "Set row n col count completed"
         #Заполним названия колонок
         labels=[]
         for i in self.dsodata.ini_data:
             labels.append(i[dso_tools.readini_fld_name])
         tableWidget.setHorizontalHeaderLabels(labels)
-        print "заполнили заголовки"
         #заполним содержимое ячеек
         record=self.dsodata.Buffer.first
         for j in range(rowCount):
-            #print "заполняем строку ",j
             recvalue=record.value
             for i in range(len(recvalue)):
                 s=" ";
@@ -344,7 +340,6 @@ class MyMainWindow(QtGui.QMainWindow):
                 newItem = QtGui.QTableWidgetItem(s)
                 tableWidget.setItem(j,i, newItem)
             record=record.next
-        print "Таблица заполнена"
         self.now_is_insert_row = False
 
 if __name__ == '__main__':
@@ -355,14 +350,9 @@ if __name__ == '__main__':
     fileName = QtGui.QFileDialog.getOpenFileName(None,
     u"Открыть файл БД", "", "Forward Data base Files (*.dso)")
     #fileName="/home/corvin/Programizm/Python/FWPython/DSO-editor/xset.dso","."
-
-    #Делаем бэкап открываемого файла, если он есть
-    #t=time.localtime(time.time())
-    #backfn=fileName[0]+" "+str(t[0])+" "+string.zfill(str(t[1]),2)+" "+string.zfill(str(t[2]),2)+" "+string.zfill(str(t[3]),2)+string.zfill(str(t[4]),2)+string.zfill(str(t[5]),2)
     
     if os.path.exists(fileName[0]):
-        #shutil.copyfile(fileName[0],backfn)
-        print u"Была создана резервная копия файла ",fileName, u"под именем "#, backfn
+        pass
     else:
         sys.exit(app.exec_())
 
@@ -370,5 +360,5 @@ if __name__ == '__main__':
     dsodata = DSODB(fileName)
     myapp.SetData(dsodata)
 
-    myapp.show()
+    myapp.showMaximized()
     sys.exit(app.exec_())
