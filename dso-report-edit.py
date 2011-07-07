@@ -159,6 +159,7 @@ class DSODB:
     
         #Читаем и и разбираем ini-фалй
         self.ini_data=dso_tools.ReadIni(inifn)
+        
     
         #Проверяем размер записи, кол-во записей
         self.dso_info=dso_tools.CheckDSO(dso_filename,self.ini_data)
@@ -169,6 +170,63 @@ class DSODB:
         for j in range(self.dso_info[dso_tools.checkdso_records]):
             rr = dso_tools.ReadRecord(dso_filename, self.ini_data, self.dso_info, j)
             self.Buffer.add(rr)
+        self.CheckIsReport()
+            
+        
+    def CheckIsReport(self):
+        #Проверка кол-ва полей. У отчетов их должно быть 3:
+        if len(self.ini_data) !=3 :
+            print "ОШИБКА! Количество полей равно ", len(self.ini_data), "у отчетов оно равно 3.\nАварийный выход"
+            sys.exit(1)
+        
+        #Определим назначение полей
+        self.cellvalue=0 #значение ячейки
+        self.report_num=0 #номер отчета
+        self.uninum = 0 #номер точки
+        
+        #Найдем, в каком поле хранится значение ячейки
+        for i in range(len(self.ini_data)):
+            field=self.ini_data[i]
+            if field[dso_tools.readini_fld_type] == "ftfloat" :
+                print "Значение ячейки хранится в поле №", i
+                self.cellvalue=i
+                break
+                
+        #Найдем, где находится номер отчета и номер точки
+        rec1 = self.Buffer.first
+        rec2 = rec1.next
+        
+        for i in range(len(self.ini_data)):
+            field=self.ini_data[i]
+            if field[dso_tools.readini_fld_type] == "ftinteger" :
+                if rec1.value[i] == rec2.value[i] : #Нашли, где находится номер отчета
+                    self.report_num=i
+                    print "Номер отчета хранится в поле №", self.report_num
+                else:
+                    self.uninum=i
+                    print "Номер точки хранится в поле №", self.uninum
+
+        #Определяем кол-во строк в одном отчете, состав отчета, сравниваем одинаковость во всей базе
+        buf_len = self.Buffer.Len()
+        self.rows_in_report = 0 #кол-во строк в одном отчете
+        self.report_data = [] #состав отчета
+        
+        cur_rec = self.Buffer.first
+        self.report_data.append(cur_rec.value[self.uninum])
+        for i in range(buf_len):
+            next_rec=cur_rec.next
+            if cur_rec.value[self.report_num] == next_rec.value[self.report_num] :
+                self.report_data.append(next_rec.value[self.uninum])
+                cur_rec = next_rec
+            else:
+                break
+        self.row_in_report= len(self.report_data)
+        
+        print "Кол-во строк в отчете равно ", self.row_in_report
+        print "Отчет содержит след. данные: ",self.report_data
+            
+        
+        
             
     def GetColCount(self):
         return len(self.ini_data)
