@@ -166,6 +166,9 @@ class DSODB:
     
         #Буффер с данными
         self.Buffer = LinkedList()
+        
+        #Буфер с отчетами
+        self.Reports = LinkedList()
         #Читаем файл в буфер
         for j in range(self.dso_info[dso_tools.checkdso_records]):
             rr = dso_tools.ReadRecord(dso_filename, self.ini_data, self.dso_info, j)
@@ -224,6 +227,31 @@ class DSODB:
         
         print "Кол-во строк в отчете равно ", self.row_in_report
         print "Отчет содержит след. данные: ",self.report_data
+        
+        #Определяем кол-во отчетов в базе данных:
+        self.count_reports_in_dso = buf_len / self.row_in_report
+        print "Кол-во отчетов: ",self.count_reports_in_dso
+        
+        #Заполнение буфера с отчетами
+        cur_rec = self.Buffer.first
+        counter = 0
+        while 1:
+            cur_rep=[]
+            for i in range(len(self.report_data)):
+                if cur_rec == None:
+                    print "ОШИБКА! Преждевременно закончились записи в БД"
+                    sys.exit(1)
+                #проверка равенства uninum в формате отчета и записи
+                if cur_rec.value[self.uninum] == self.report_data[i]:
+                    cur_rep.append(cur_rec.value[self.cellvalue])
+                else:
+                    print "ОШИБКА! Не совпадает запись № ", counter, " в БД с форматом отчета"
+                    sys.exit(1)
+                cur_rec = cur_rec.next
+                counter+=1
+            self.Reports.add(cur_rep)
+            if cur_rec == None:
+                break
             
         
         
@@ -232,7 +260,13 @@ class DSODB:
         return len(self.ini_data)
             
     def GetRowCount(self):
-        return self.Buffer.Len()
+        return self.count_reports_in_dso
+
+    def GetRepColCount(self):
+        return len(self.report_data)
+            
+    def GetRepRowCount(self):
+        return self.Reports.Len()
     
     def delRow(self,index):
         self.Buffer.Del(index)
@@ -373,8 +407,8 @@ class MyMainWindow(QtGui.QMainWindow):
         
     def FillTable(self):
         self.now_is_insert_row = True
-        columnCount = self.dsodata.GetColCount()
-        rowCount = self.dsodata.GetRowCount()
+        columnCount = self.dsodata.GetRepColCount()
+        rowCount = self.dsodata.GetRepRowCount()
     
         tableWidget =self.ui.tableWidget
         tableWidget.setRowCount(rowCount)
@@ -382,19 +416,15 @@ class MyMainWindow(QtGui.QMainWindow):
         tableWidget.clear()
         #Заполним названия колонок
         labels=[]
-        for i in self.dsodata.ini_data:
-            labels.append(i[dso_tools.readini_fld_name])
+        for i in self.dsodata.report_data:
+            labels.append(str(i))
         tableWidget.setHorizontalHeaderLabels(labels)
         #заполним содержимое ячеек
-        record=self.dsodata.Buffer.first
+        record=self.dsodata.Reports.first
         for j in range(rowCount):
             recvalue=record.value
             for i in range(len(recvalue)):
-                s=" ";
-                if self.dsodata.ini_data[i][dso_tools.readini_fld_type] == "ftstring" :
-                    s=recvalue[i]
-                else:
-                    s=str(recvalue[i])
+                s=str(recvalue[i])
                 newItem = QtGui.QTableWidgetItem(s)
                 tableWidget.setItem(j,i, newItem)
             record=record.next
@@ -407,7 +437,7 @@ if __name__ == '__main__':
     #Выбираем файл БД
     #fileName = QtGui.QFileDialog.getOpenFileName(None,
     #u"Открыть файл БД", "", "Forward Data base Files (*.dso)")
-    fileName="/home/corvin/Programizm/Python/FWPython/DSO-editor/repdata.dso","."
+    fileName="/home/corvin/Programizm/Python/DSO-editor/repdata.dso","."
     
     if os.path.exists(fileName[0]):
         pass
