@@ -1,10 +1,10 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 #
-#       dso-edit.py
-#       Редактор баз данных Форвард (*.dso). GUI
+#       dso-report-edit.py
+#       Редактор отчетов баз данных Форвард (*.dso). GUI
 #       
-#       Copyright 2011 Unknown <corvin@Amber>
+#       Copyright 2011 Unknown <corvinalive@yandex.ru>
 #       
 #       This program is free software; you can redistribute it and/or modify
 #       it under the terms of the GNU General Public License as published by
@@ -22,130 +22,10 @@
 #       MA 02110-1301, USA.
 
 from PySide import QtCore, QtGui, QtSql
-import dso_tools
+import dso_tools, linked_list
 import time, string, os, shutil, sys
 from dso_report_gui import Ui_MainWindow
 
-class Node:
-    def __init__(self, value = None, next = None):
-        self.value = value
-        self.next = next
-        
-class LinkedList:
-    def __init__(self):
-        self.first = None
-        self.last = None
-        self.length = 0
-
-    def __str__(self):
-        if self.first != None:
-            current = self.first
-            out = 'LinkedList [\n' +str(current.value) +'\n'
-            while current.next != None:
-                current = current.next
-                out += str(current.value) + '\n'
-            return out + ']'
-        return 'LinkedList []'
-
-    def clear(self):
-        self.__init__()
-    #добавление в конец списка
-    def add(self, x):
-        if self.first == None:
-            self.first = Node(x, None)
-            self.last = self.first
-        elif self.last == self.first:
-            self.last = Node(x, None)
-            self.first.next = self.last
-        else:
-            current = Node(x, None)
-            self.last.next = current
-            self.last = current                
-        
-    def Len(self):
-        self.length =0
-        if self.first != None:
-            self.length +=1
-            current = self.first
-            while current.next != None:
-                current = current.next
-                self.length +=1
-        return self.length
-   
-   #добавить в указаннную позицию
-    def InsertNth(self,i,x):
-        #print "insert into list. i=",i
-        
-        #если список пустой
-        if (self.first == None):
-            self.first = Node(x,self.first)
-            self.last = self.first.next
-            return
-        #Если вставка в начало списка
-        if i == 0:
-            self.first = Node(x,self.first)
-            return
-        count=self.Len()
-        #вставка в конец списка
-        if i>=count:
-            #print "вставлено в конец списка"
-            exlast=self.last
-            self.last=Node(x)
-            exlast.next=self.last
-            return
-            
-        #вставка в середину списка
-        curr=self.first
-        #print curr
-        count = 0
-        while 1:
-            #print "count=",count
-            if count == i-1:
-                curr.next = Node(x,curr.next)
-                #print "Вставлено!"
-                if curr.next.next == None:
-                    self.last = curr.next
-                break
-            curr = curr.next
-            count+=1
-   
-    def Del(self,i):
-        if (self.first == None):
-          return
-        old = curr = self.first
-        count = 0
-        if i == 0:
-          self.first = self.first.next
-          return
-        while curr != None:
-            #print "count=",count," index=",i
-            if count == i:
-              if curr.next == self.last:
-                self.last = curr
-                break
-              else:
-                old.next = curr.next 
-              break
-            old = curr  
-            curr = curr.next
-            count += 1
-            
-    def ItemAt(self,i):
-        #Вернуть первый элемент, если i==0
-        if i==0:
-            return self.first
-        #Перебираем элементы
-        if self.first == None:
-            return None
-        index=0
-        current=self.first
-        while 1:
-            index+=1
-            current=current.next
-            if index==i:
-                return current
-            if current==None:
-                return None
         
         
 class DSODB:
@@ -165,10 +45,10 @@ class DSODB:
         self.dso_info=dso_tools.CheckDSO(dso_filename,self.ini_data)
     
         #Буффер с данными
-        self.Buffer = LinkedList()
+        self.Buffer = linked_list.LinkedList()
         
         #Буфер с отчетами
-        self.Reports = LinkedList()
+        self.Reports = linked_list.LinkedList()
         #Читаем файл в буфер
         for j in range(self.dso_info[dso_tools.checkdso_records]):
             rr = dso_tools.ReadRecord(dso_filename, self.ini_data, self.dso_info, j)
@@ -214,6 +94,8 @@ class DSODB:
         self.rows_in_report = 0 #кол-во строк в одном отчете
         self.report_data = [] #состав отчета
         
+        self.report_data.append(u"№ отчета")
+        
         cur_rec = self.Buffer.first
         self.report_data.append(cur_rec.value[self.uninum])
         for i in range(buf_len):
@@ -223,7 +105,7 @@ class DSODB:
                 cur_rec = next_rec
             else:
                 break
-        self.row_in_report= len(self.report_data)
+        self.row_in_report= len(self.report_data)-1
         
         print "Кол-во строк в отчете равно ", self.row_in_report
         print "Отчет содержит след. данные: ",self.report_data
@@ -237,12 +119,20 @@ class DSODB:
         counter = 0
         while 1:
             cur_rep=[]
-            for i in range(len(self.report_data)):
+            #номер текущего отчета
+            cur_rep_num = cur_rec.value[self.report_num]
+            cur_rep.append(str(cur_rep_num))
+            
+            for i in range(len(self.report_data)-1):
+                #проверка одинаковости номер отчета
+                if cur_rec.value[self.report_num] != cur_rep_num:
+                    print "ОШИБКА! Некорректный номер отчета в записи №", counter
+                    sys.exit(1)
                 if cur_rec == None:
                     print "ОШИБКА! Преждевременно закончились записи в БД"
                     sys.exit(1)
                 #проверка равенства uninum в формате отчета и записи
-                if cur_rec.value[self.uninum] == self.report_data[i]:
+                if cur_rec.value[self.uninum] == self.report_data[i+1]:
                     cur_rep.append(cur_rec.value[self.cellvalue])
                 else:
                     print "ОШИБКА! Не совпадает запись № ", counter, " в БД с форматом отчета"
@@ -252,15 +142,6 @@ class DSODB:
             self.Reports.add(cur_rep)
             if cur_rec == None:
                 break
-            
-        
-        
-            
-    def GetColCount(self):
-        return len(self.ini_data)
-            
-    def GetRowCount(self):
-        return self.count_reports_in_dso
 
     def GetRepColCount(self):
         return len(self.report_data)
@@ -269,7 +150,13 @@ class DSODB:
         return self.Reports.Len()
     
     def delRow(self,index):
-        self.Buffer.Del(index)
+        #Удаляем данные из списка записей
+        len_rep = len(self.report_data-1)
+        rec_index = index*len_rep
+        for i in range(len_rep):
+            self.Buffer.Del(rec_index)
+        #удаляем данные из списка отчетов
+        self.Reports.Del(index)
     
     def addRow(self,index):
         #print "addrow index=",index
@@ -416,8 +303,9 @@ class MyMainWindow(QtGui.QMainWindow):
         tableWidget.clear()
         #Заполним названия колонок
         labels=[]
-        for i in self.dsodata.report_data:
-            labels.append(str(i))
+        labels.append(self.dsodata.report_data[0])
+        for i in range(len(self.dsodata.report_data)-1):
+            labels.append(str(self.dsodata.report_data[i+1]))
         tableWidget.setHorizontalHeaderLabels(labels)
         #заполним содержимое ячеек
         record=self.dsodata.Reports.first

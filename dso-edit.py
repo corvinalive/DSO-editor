@@ -22,130 +22,10 @@
 #       MA 02110-1301, USA.
 
 from PySide import QtCore, QtGui, QtSql
-import dso_tools
+import dso_tools, linked_list
 import time, string, os, shutil, sys
 from dso_gui import Ui_MainWindow
 
-class Node:
-    def __init__(self, value = None, next = None):
-        self.value = value
-        self.next = next
-        
-class LinkedList:
-    def __init__(self):
-        self.first = None
-        self.last = None
-        self.length = 0
-
-    def __str__(self):
-        if self.first != None:
-            current = self.first
-            out = 'LinkedList [\n' +str(current.value) +'\n'
-            while current.next != None:
-                current = current.next
-                out += str(current.value) + '\n'
-            return out + ']'
-        return 'LinkedList []'
-
-    def clear(self):
-        self.__init__()
-    #добавление в конец списка
-    def add(self, x):
-        if self.first == None:
-            self.first = Node(x, None)
-            self.last = self.first
-        elif self.last == self.first:
-            self.last = Node(x, None)
-            self.first.next = self.last
-        else:
-            current = Node(x, None)
-            self.last.next = current
-            self.last = current                
-        
-    def Len(self):
-        self.length =0
-        if self.first != None:
-            self.length +=1
-            current = self.first
-            while current.next != None:
-                current = current.next
-                self.length +=1
-        return self.length
-   
-   #добавить в указаннную позицию
-    def InsertNth(self,i,x):
-        #print "insert into list. i=",i
-        
-        #если список пустой
-        if (self.first == None):
-            self.first = Node(x,self.first)
-            self.last = self.first.next
-            return
-        #Если вставка в начало списка
-        if i == 0:
-            self.first = Node(x,self.first)
-            return
-        count=self.Len()
-        #вставка в конец списка
-        if i>=count:
-            #print "вставлено в конец списка"
-            exlast=self.last
-            self.last=Node(x)
-            exlast.next=self.last
-            return
-            
-        #вставка в середину списка
-        curr=self.first
-        #print curr
-        count = 0
-        while 1:
-            #print "count=",count
-            if count == i-1:
-                curr.next = Node(x,curr.next)
-                #print "Вставлено!"
-                if curr.next.next == None:
-                    self.last = curr.next
-                break
-            curr = curr.next
-            count+=1
-   
-    def Del(self,i):
-        if (self.first == None):
-          return
-        old = curr = self.first
-        count = 0
-        if i == 0:
-          self.first = self.first.next
-          return
-        while curr != None:
-            #print "count=",count," index=",i
-            if count == i:
-              if curr.next == self.last:
-                self.last = curr
-                break
-              else:
-                old.next = curr.next 
-              break
-            old = curr  
-            curr = curr.next
-            count += 1
-            
-    def ItemAt(self,i):
-        #Вернуть первый элемент, если i==0
-        if i==0:
-            return self.first
-        #Перебираем элементы
-        if self.first == None:
-            return None
-        index=0
-        current=self.first
-        while 1:
-            index+=1
-            current=current.next
-            if index==i:
-                return current
-            if current==None:
-                return None
         
         
 class DSODB:
@@ -164,7 +44,7 @@ class DSODB:
         self.dso_info=dso_tools.CheckDSO(dso_filename,self.ini_data)
     
         #Буффер с данными
-        self.Buffer = LinkedList()
+        self.Buffer = linked_list.LinkedList()
         #Читаем файл в буфер
         for j in range(self.dso_info[dso_tools.checkdso_records]):
             rr = dso_tools.ReadRecord(dso_filename, self.ini_data, self.dso_info, j)
